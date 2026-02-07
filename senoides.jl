@@ -7,12 +7,6 @@ using InteractiveUtils
 # ╔═╡ 9adef71e-de60-4794-b721-c2ea7c128aab
 using PlutoUI, CairoMakie, LaTeXStrings, Markdown
 
-# ╔═╡ d19de826-6dd7-400e-a8fd-8864d5b710aa
-begin
-	set_theme!(theme_dark())
-	TableOfContents()
-end
-
 # ╔═╡ ec48964c-ebc3-11f0-8691-9b760cc0aa0e
 md"""
 # Senoides e Fasores
@@ -558,8 +552,7 @@ let
 	y = v.(x)
 
 	f = Figure(size=(500, 300))
-	ax = Axis(f[1, 1], xlabel=L"t", ylabel=L"f(t)",
-			  title="Senoides")
+	ax = Axis(f[1, 1], xlabel=L"t", ylabel=L"f(t)")
 	lines!(ax, x, y, linewidth=3, label=L"v(t)=8\cos(\omega t + 70\degree)V")
 	y = i.(x)
 	lines!(ax, x, y, linewidth=3, label=L"i(t)=5\cos(\omega t + 126.87\degree)A")
@@ -573,16 +566,412 @@ md"""
 ### Problema Prático 9.5
 Determine as senóides representadas pelos fasores seguintes:
 1. ``V = -25 \angle 40\degree V``.
+
+Para esse exercício, tudo é muito simples. Precisamos apenas remover o sinal negativo do raio somando ``180\degree``.
+
+```math
+\begin{aligned}
+-25 \angle 40\degree &= 25 \angle 40\degree + 180\degree \\
+&= 25 \cos(\omega t + 220\degree) V
+\end{aligned}
+```
 2. ``I = j(12 - j5)A``.
+
+Nesse exercício, precisamos multiplicar j e converter ambos os números para sua forma polar.
 """
 
 # ╔═╡ 5b76deb6-4d77-45de-b192-2511661d079f
 let
+	r₁ = 1
+	ϕ₁ = round(90, digits=3)
+	z = 12 - 5*im
+	r₂ = round(abs(z), digits=3)
+	ϕ₂ = round(rad2deg(angle(z)), digits=3)
+
+	@info "j na sua forma polar" r₁ ϕ₁
+	@info "z na sua forma polar" r₂ ϕ₂
+
+	r₃ = r₁ * r₂
+	ϕ₃ = ϕ₁ + ϕ₂
+
+	markd = """
+	- **Resultado**
+
+	Na sua forma polar:
+		
+	**raio:** $r₃
+
+	**ângulo:** $ϕ₃
+
+	**senoide:** ``$r₃ \\cos(\\omega t + $ϕ₃) A``
+	"""
+	
+	Markdown.parse(markd)
+end
+
+# ╔═╡ 669fda38-8aef-4e4e-b51a-f5dfc5bfb5f8
+md"""
+### Exemplo 9.6
+Dados ``i(t)=4\cos(\omega t + 30\degree) A`` e ``5 \sin(\omega t + 20\degree)A``, determine sua soma.
+
+- **Solução:** Eis um importante uso dos fasores - a soma de senoides de mesma frequência. A corrente ``i_1(t)`` se encontra na sua forma padrão. Seu fasor é
+
+```math
+I_1 = 4 \angle 30\degree
+```
+
+Precisamos expressar ``i_2(t)`` na forma de cosseno. A regra para conversão de seno em cosseno é subtrair ``90\degree``. Portanto,
+
+```math
+i_2 = 5 \cos(\omega t + 20\degree - 90\degree) = 5\cos(\omega t - 70\degree)
+```
+
+seu fasor é
+
+```math
+I_2 = 5 \angle - 70\degree
+```
+
+Se fizermos ``i = i_1 + i_2``, então
+
+```math
+I = I_1 + I_2 = 4 \angle 30\degree + 5 \angle - 70\degree
+```
+Iremos converter os dois fasores para a forma retangular e somá-los.
+"""
+
+# ╔═╡ 0dc9c342-4b78-4629-a9ae-2188604226cf
+let
+	z₁ = round(4 * cis(deg2rad(30)))
+	z₂ = round(5 * cis(deg2rad(-70)))
+	@info "Numeros que devem ser somados" z₁ z₂
+	z₃ = z₁ + z₂
+
+	result="""
+	- Resultado:
+
+	Forma Retangular: $z₃
+
+	Senoide: ``$(round(abs(z₃))) \\cos(\\omega t $(round(rad2deg(angle(z₃))))  \\degree)``
+	"""
+	Markdown.parse(result)
+end
+
+# ╔═╡ 4516e2ae-6021-4b86-b0ab-f75d1f970b1f
+md"""
+### Problema Prático 9.6
+Se ``v_1(t) = -10 \sin(\omega t -30\degree)V`` e ``v_2(t) = 20 \cos(\omega t + 45\degree)``, determine ``v = v_1 + v_2``.
+
+O primeiro passo para a solução é converter -seno para cosseno adicionando 90° na fase.
+
+```math
+\begin{aligned}
+v_1(t) &= -10 \sin(\omega t -30\degree) = 10 \cos(\omega t -30\degree + 90\degree) \\
+&= 10 \cos(\omega t + 60\degree)
+\end{aligned}
+```
+
+A seguir convertemos os dois números para a forma retangular e somamos.
+"""
+
+# ╔═╡ 49cd52de-8495-4570-b022-804f76b387e3
+md"""
+### Exemplo 9.7
+Usando o método de fasores, determine a corrente ``i(t)`` em um circuito descrito pela equação diferencial:
+
+```math
+4i + 8 \int{i \cdot dt} - 3 \frac{di}{dt} = 50 \cos(2t + 75°)
+```
+
+- **Solução:** Transformamos cada termo da equação no domínio do tempo para o domínio dos fasores. Obtemos a forma em termos de fasores da equação dada como segue:
+
+- ``i(t) \to I``
+- ``\frac{di}{dt} \to j\omega I``
+- ``\int{i dt} \to \frac{I}{j\omega}``
+
+Aplicando à equação:
+
+```math
+4I + 8\cdot \frac{I}{j \omega} - 3 \cdot(j \omega I) = 50 \angle 75\degree
+```
+
+- **Substituindo pela Frequência Angular**
+  
+  O problema nos dá $\cos(2t + 75\degree)$, então $\omega = 2$ rad/s.
+
+  ```math
+  \begin{aligned}
+    4I + \frac{8I}{j2} - 3 \cdot j(2)I &= 50 \angle 75\degree \\
+    &= 4I + \frac{8I}{j2} -6jI = 50 \angle 75\degree
+  \end{aligned}
+  ```
+- **Simplificando os Termos**
+  ```math
+    \frac{8}{j2} = \frac{8}{2j} = \frac{4}{j} = -j4
+  ```
+  Logo:
+
+  ```math
+  \begin{aligned}
+    4I -j4I - j6I &= 50 \angle 75\degree \\
+    I(4 - j10) &= 50 \angle 75\degree
+  \end{aligned}
+  ```
+
+- **Isolamos o fator da corrente**:
+  ```math
+    I = \frac{50 \angle 75\degree}{4 - j10}
+  ```
+
+- **Transformamos para Forma Polar**
+  
+  Transformamos o denominador para a forma polar:
+  ```math
+    I = \frac{50 \angle 75\degree}{10.77\angle -68.2\degree}
+  ```
+    + Efetuamos a divisão de fasores:
+        
+  ```math
+    4.642 \angle 143.2\degree
+  ```
+- **Resultado no Domínio do Tempo**
+
+```math
+	i(t) = 4.642 \cos(2t + 143.2\degree)
+```
+"""
+
+# ╔═╡ 7ea14af2-b75d-46ad-a1ea-de159eb01267
+let
+	# Definição dos parâmetros
+    ω = 2
+    # cis(θ) = e^(jθ), cria um número complexo na forma polar.
+    V = 50 * cis(deg2rad(75)) 
+    # Denominador (impledância equivalente).
+    z = 4 - 10im
+
+    # Corrente fasorial
+    I = round(V / z, digits=3)
+
+    @info "Corrente fasorial I = $I"
+
+    # Módulo e fase. Para forma polar.
+    rᵢ = round(abs(I), digits=3)
+    ϕᵢ = round(rad2deg(angle(I)), digits=3)
+
+    @info "Raio: $rᵢ, Fase: $ϕᵢ"
+end
+
+# ╔═╡ b201ae0a-908a-4850-a410-fbee4283bdfc
+md"""
+### Problema Prático 9.7
+Determine a tensão $v(t)$ em um circuito descrito pela equação a seguir:
+
+```math
+    2\frac{dv}{dt} + 5v + 10 \int{v \cdot dt} = 50 \cos(5t - 30\degree)
+```
+
+- **Solução:** Transformar o lado direito da equação para o **domínio dos fasores**
+  
+- ``v(t) = V``
+- ``\frac{dv}{dt} = j\omega V``
+- ``\int{vdt} = \frac{V}{j\omega}``
+
+Como nosso ``\omega = 5``:
+
+```math
+\begin{aligned}
+    2 \cdot j\omega V + 5V + \frac{10V}{j\omega} = 50 \cos(5t - 30\degree) \\
+    2j5V + 5V + \frac{10V}{j5} = 50 \cos(5t - 30\degree) \\
+    2j5V + 5V - j2V =  50 \cos(5t - 30\degree) \\
+    j10V + 5V - j2V =  50 \cos(5t - 30\degree) \\
+    j8V + 5V = 50 \cos(5t - 30\degree) \\
+    V(5 + j8) = 50 \cos(5t - 30\degree) \\
+\end{aligned}
+```
+
+- Convertemos as equações para a forma polar e depois para senoide.
+```math
+\begin{aligned}
+     V(5 + j8) &= 50 \angle -30\degree \\
+     V &= \frac{50 \angle -30\degree}{5 + j8} \\
+     V &= \frac{50 \angle -30\degree}{9.434 \angle 57.995}\degree \\
+     V &= 5.299 \angle -87.995\degree \\
+     V &= 5.3 \cos(5t - 87.995\degree)
+\end{aligned}
+```
+"""
+
+# ╔═╡ 3594a1bf-efc3-4431-aae6-002d0c84f235
+md"""
+### Relações entre Fasores para Elementos de Circuitos
+
+Agora que sabemos como representar tensão e corrente no domínio da frequência, precisamos aplicar esse conceito a circuitos contendo elementos passivos *R*, *L* e *C*. Para isso, precisamos transformar a relação tensão-corrente do domínio do tempo para o domínio da frequência em cada um dos elementos.
+
+Comecemos pelo resistor. Se a corrente através de um resistor ``R`` for ``i = I_m cos(\omega t + \phi)``, a tensão nele será dada pela **Lei de Ohm**, como segue
+
+```math
+v = iR = RI_m\cos(\omega t + \phi)
+```
+
+Na forma de fasores, essa tensão é
+
+```math
+V = RI_m\angle \phi
+```
+
+Porém, a representação fasorial da corrente é ``I = I_m \angle \phi``. Logo
+
+```math
+V = RI
+```
+
+Para o resistor, a corrente e a tensão estão **em fase**.
+
+mostrando que a relação tensão-corrente para o resistor no domínio da frequência continua ser a lei de Ohm, como acontece no domínio do tempo.
+
+Para o indutor ``L``, suponha que a corrente através dele seja ``i = I_m \cos(\omega t + \phi)``.
+
+A tensão no indutor é
+```math
+v = L \frac{di}{dt} = - \omega LI_m \sin(\omega t + \phi)
+```
+
+Sabemos que ``-sin(A)=\cos(A + 90\degree)``, podemos escrever a tensão como
+
+```math
+v = \omega LI_m \cos(\omega t + \phi + 90\degree)
+```
+que pode ser transformada no fasor
+
+```math
+\begin{aligned}
+V = \omega LI_m e^{j(\phi + 90\degree)} &= \omega LI_m e^{j\phi} e^{j90\degree} \\
+&= \omega LI_m \angle \phi + 90\degree
+\end{aligned}
+```
+
+Porém, ``I_m\angle \phi=I``. Logo
+
+```math
+V = j\omega LI
+```
+"""
+
+# ╔═╡ 84de9a21-9cf9-4761-af75-b79da2d02922
+md"""
+revelando que a tensão tem magnitude igual a ``\omega LI_m`` e fase ``\phi + 90\degree``. A tensão e corrente estão a 90° fora de fase. A corrente está atrasada em 90°.
+
+Para o capacitor ``C``, suponha que a tensão nele seja ``v = V_m \cos(\omega t + \phi)``. A corrente através de capacitor é
+
+```math
+i = C \frac{dv}{dt}
+```
+
+Seguindo as mesmas etapas do caso do indutor, obtemos
+
+```math
+I = j\omega CV \rightarrow V=\frac{I}{j\omega C}
+```
+
+demonstrando que corrente e tensão estão 90° fora de fase. Neste caso, a corrente está adiantada em 90° em relação a tensão.
+A tabela abaixo sintetiza as representações dos elementos de circuitos nos domínios do tempo e da frequência.
+
+| Elemento | Domínio do Tempo | Domínio da Frequência|
+| :--- | :---: | ---: |
+| ``R`` | ``v = Ri`` |  ``V = RI`` |
+| ``L`` | ``v = L\frac{di}{dt}`` | ``V=j\omega LI`` |
+| ``C`` | ``i = C\frac{dv}{dt}`` | ``V= \frac{I}{j\omega C}`` |
+"""
+
+
+
+# ╔═╡ 07123b9b-6b73-4af0-ba9c-b9cf9a62e3ad
+md"""
+### Exemplo 9.8
+A tensão ``v = 12 \cos(60t + 45\degree)`` é aplicada a um indutor de ``0.1H``. Determine a corrente em regime estacionário através do indutor.
+
+**Solução:** Para o indutor, ``V = j\omega LI``, onde ``\omega = 60`` rad/s e ``V = 12 \angle 45\degree V``. Portanto,
+
+```math
+I = \frac{V}{j\omega L} = \frac{12 \angle 45\degree}{j60 \cdot 0.1} = \frac{12 \angle 45\degree}{6 \angle 90\degree} = 2 \angle -45\degree A
+```
+
+### Problema Prático 9.8
+Se a tensão ``v = 10 \cos(100t + 30\degree)`` for aplicada a um capacitor de ``50 \mu F``, calcule a corrente através do capacitor.
+
+**Solução:** A tensão no capacitor é ``V = \frac{I}{j\omega C}``, logo a corrente
+
+```math
+I = j\omega C \cdot V = j100 \cdot 50*10^{-6} \cdot 10\angle 30\degree
+```
+
+A partir daqui **podemos usar uma calculadora** ou, **linguagem Julia**, já que sabemos todas as regras para calcular números complexos tanto na forma retangular como polar.
+"""
+
+# ╔═╡ a89d721b-a403-40fa-b50a-29133cafbaff
+md"""
+## Recursos
+Mude a propriedade das células para visível, para ver o código fonte Julia.
+"""
+
+# ╔═╡ d19de826-6dd7-400e-a8fd-8864d5b710aa
+begin
+	TableOfContents()
+end
+
+# ╔═╡ 3d9a7c6f-ba53-48a8-994d-958af0fa98ae
+begin
+	# Converte de polar para retangular
+	function polar2rect(r::Float64, θ::Float64)
+		return r * exp(im * θ)
+	end
+
+	# Converte de retangular para polar
+	function rect2polar(z::Complex{Float64})
+		r = abs(z)
+		θ = angle(z)
+		return (r, θ)
+	end
+	nothing
+end
+
+# ╔═╡ e85eebc2-d82b-44ad-9105-fc8b6a13da4f
+let
+	r₁ = 10.0
+	ϕ₁ = deg2rad(60.0)
+	z₁ = polar2rect(r₁, ϕ₁)
+
+	r₂ = 20.0
+	ϕ₂ = deg2rad(45)
+	z₂ = polar2rect(r₂, ϕ₂)
+
+	result = z₁ + z₂
+	presult = rect2polar(result)
+
+	markd ="""
+	- Resultado
+	``v = $(round(presult[1]))\\cos(\\omega t + $(round(rad2deg(presult[2]))))V``
+	"""
+	Markdown.parse(markd)
+end
+
+# ╔═╡ 2c9c7175-5326-4882-b376-ef85aa8d860e
+let
+	z₁ = round(100im*50e-6, digits=5)
+	z₂ = round(polar2rect(10.0, deg2rad(30)), digits=5)
+	I = z₁ * z₂
+	r, θ = rect2polar(I)
+	
+	md"""
+	O resultado é **r: $(round(r, digits=3)), θ: $(round(θ, digits=3))** na forma
+	de fasor, e **0.05 cos(100t + 2.095)V** na forma de senoide.
+	"""
 end
 
 # ╔═╡ bf03cc83-eff5-4263-9e3a-3a9aa5a1b628
 md"""
-### Bibiografia
+## Bibliografia
 Fundamentos de Circuitos Elétricos, ``5^a`` Edição
 """
 
@@ -2175,8 +2564,6 @@ version = "4.1.0+0"
 """
 
 # ╔═╡ Cell order:
-# ╠═9adef71e-de60-4794-b721-c2ea7c128aab
-# ╠═d19de826-6dd7-400e-a8fd-8864d5b710aa
 # ╟─ec48964c-ebc3-11f0-8691-9b760cc0aa0e
 # ╟─eeee2496-16a3-4e9a-8b64-4df4999afd9c
 # ╟─195bf467-d56d-4df6-bbc0-68dcbd175d33
@@ -2184,9 +2571,9 @@ version = "4.1.0+0"
 # ╟─aa4418f3-0711-48f7-a322-9115e69255f1
 # ╟─f9ec4b5f-4384-4179-91a8-231d7c6902d0
 # ╟─061c5606-ee63-432c-9bfb-1ff93613f52d
-# ╠═1098a831-13fc-4819-a80c-9e65fce964de
+# ╟─1098a831-13fc-4819-a80c-9e65fce964de
 # ╟─11cd3feb-92b1-4ca0-a619-4a37234439bf
-# ╠═81bab0c6-1333-42ec-b086-91cbd9e7a2c3
+# ╟─81bab0c6-1333-42ec-b086-91cbd9e7a2c3
 # ╟─97c91ba9-6c00-4645-ac36-c5a9aabd4336
 # ╟─225fc9f9-a16a-4a58-94c4-55166e04a55c
 # ╟─618601bf-3032-4350-97e5-2be66c6c13e7
@@ -2197,16 +2584,31 @@ version = "4.1.0+0"
 # ╟─26c360d8-5819-4a11-bf34-475e47102ffc
 # ╟─cd6717b3-e739-403a-a496-e1360e2bcc06
 # ╟─ae846e01-0992-4f63-84e9-aa9c986fe4b2
-# ╠═e86b97fc-079d-46df-9ab0-0e1cd92b19bd
+# ╟─e86b97fc-079d-46df-9ab0-0e1cd92b19bd
 # ╟─8e760db2-e38b-4e19-9341-fafffb86a38f
-# ╠═a1829730-7c0f-4055-8b76-2de2c1561fbc
+# ╟─a1829730-7c0f-4055-8b76-2de2c1561fbc
 # ╟─999fc068-76cd-4a56-8e3a-94437672b61b
 # ╟─323a34d9-2961-43e8-a581-7d2e2ce56d46
 # ╟─140641ec-d75a-4a9c-947b-d67084a86fcd
 # ╟─c249754d-e492-42fc-90f4-042fd48f94d8
 # ╟─62e37237-38c5-4234-a8e8-6e86aa591894
 # ╟─53a78ee2-21e8-4971-b938-9a317e9a4cd3
-# ╠═5b76deb6-4d77-45de-b192-2511661d079f
+# ╟─5b76deb6-4d77-45de-b192-2511661d079f
+# ╟─669fda38-8aef-4e4e-b51a-f5dfc5bfb5f8
+# ╟─0dc9c342-4b78-4629-a9ae-2188604226cf
+# ╟─4516e2ae-6021-4b86-b0ab-f75d1f970b1f
+# ╟─e85eebc2-d82b-44ad-9105-fc8b6a13da4f
+# ╟─49cd52de-8495-4570-b022-804f76b387e3
+# ╟─7ea14af2-b75d-46ad-a1ea-de159eb01267
+# ╟─b201ae0a-908a-4850-a410-fbee4283bdfc
+# ╟─3594a1bf-efc3-4431-aae6-002d0c84f235
+# ╟─84de9a21-9cf9-4761-af75-b79da2d02922
+# ╟─07123b9b-6b73-4af0-ba9c-b9cf9a62e3ad
+# ╟─2c9c7175-5326-4882-b376-ef85aa8d860e
+# ╟─a89d721b-a403-40fa-b50a-29133cafbaff
+# ╟─9adef71e-de60-4794-b721-c2ea7c128aab
+# ╟─d19de826-6dd7-400e-a8fd-8864d5b710aa
+# ╟─3d9a7c6f-ba53-48a8-994d-958af0fa98ae
 # ╟─bf03cc83-eff5-4263-9e3a-3a9aa5a1b628
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
